@@ -19,10 +19,10 @@ jobs:
           echo "CI_MERGE_REQUEST_IID=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
 
       - name: Download SwiftLint config
-        run: curl -O https://github.com/EightpointIO/ios-build-public/.swiftlint.yml
+        run: curl -O https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/.swiftlint.yml
 
       - name: Download Dangerfile
-        run: curl -O https://github.com/EightpointIO/ios-build-public/Dangerfile.swift
+        run: curl -O https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/Dangerfile.swift
 
       - name: Run Danger
         run: danger-swift ci --fail-on-errors
