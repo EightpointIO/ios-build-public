@@ -1,0 +1,17 @@
+#!/bin/sh
+commitMessageRegex="v\d+\.\d+ \| \[\w+-\d+\] (feature|bug|refactor|test|other): .*"
+commitMessageFile="$1"
+commitMessage=$(cat "$commitMessageFile")
+
+if ! [[ "$commitMessage" =~ $commitMessageRegex ]]; then
+  echo "Invalid commit message, it should follow the pattern: \"v\d+\.\d+ \| \[\w+-\d+\] (feature|bug|refactor|test|other): .*\""
+  exit 1
+fi
+
+userEmailRegex="@eightpoint\.io$"
+userEmail=$(git config user.email)
+
+if ! [[ "$userEmail" =~ $userEmailRegex ]]; then
+  echo "Invalid commit author email, it should contain the eightpoint.io domain"
+  exit 1
+fi
