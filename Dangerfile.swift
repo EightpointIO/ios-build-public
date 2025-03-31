@@ -26,22 +26,11 @@ if git.commits.count >= 10 {
 }
 
 if let github {
-    // MARK: Pull Request Description
-    if (github.pullRequest.description.count < 10) {
-        fail("🚨 Please provide a summary in the Pull Request description to help your colleagues understand the MR purpose.")
-    }
-
-
-    // MARK: Assignee needed
-    if github.pullRequest.assignee == nil {
-        warn("⚠️ Please assign someone to this PR.")
-    }
-
     // MARK: Total lines of code
     let allSourceFiles = git.modifiedFiles + git.createdFiles
-    if !allSourceFiles.isEmpty, let github {
+    if !allSourceFiles.isEmpty {
         let totalLinesOfCode = allSourceFiles.reduce(0) { partialResult, file in
-            if let diff = try?  danger.utils.diff(forFile: file, sourceBranch: github.pullRequest.targetBranch).get() {
+            if let diff = try? danger.utils.diff(forFile: file, sourceBranch: danger.github.pullRequest.head.ref).get() {
                 let changes = diff.changes
                 switch changes {
                 case .created(let addedLines):
@@ -62,6 +51,11 @@ if let github {
         } else if totalLinesOfCode > 400 {
             warn("⚠️ Consider keeping changes to less than 400 lines of code.")
         }
+    }
+
+    // MARK: Pull Request Description
+    if (github.pullRequest.body?.count ?? 0) < 10 {
+        fail("🚨 Please provide a summary in the Pull Request description to help your colleagues understand the PR purpose.")
     }
 }
 
