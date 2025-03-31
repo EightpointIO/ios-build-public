@@ -1,4 +1,8 @@
 name: Run Danger
+inputs:
+  github-token: 
+    description: GitHub access token for Danger
+    required: true
 
 on:
   pull_request:
@@ -6,26 +10,20 @@ on:
 
 jobs:
   danger:
-    runs-on: macos-14
+    runs-on: ubuntu-latest
     container:
       image: ghcr.io/danger/danger-swift-with-swiftlint:3.15.0
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set environment variables
-        run: |
-          echo "CI_PROJECT_PATH=${{ github.repository }}" >> $GITHUB_ENV
-          echo "CI_MERGE_REQUEST_IID=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
-
       - name: Download SwiftLint config
-        run: curl -O https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/.swiftlint.yml
+        run: curl -o ".swiftlint.yml" https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/.swiftlint.yml
 
       - name: Download Dangerfile
-        run: curl -O https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/Dangerfile.swift
+        run: curl -o "Dangerfile.swift" https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/Dangerfile.swift
 
       - name: Run Danger
-        run: danger-swift ci --fail-on-errors
-
-    env:
-      DANGER_GITHUB_API_TOKEN: ${{ secrets.DANGER_GITHUB_API_TOKEN }}
+        env:
+          GITHUB_TOKEN: github-token
+        run: danger-swift ci -dangerfile="Dangerfile.swift" --config=".swiftlint.yml" --fail-on-errors
