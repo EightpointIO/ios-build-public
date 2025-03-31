@@ -1,0 +1,18 @@
+#!/bin/sh
+# Define the URL of the remote script
+REMOTE_SCRIPT_URL="https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/hooks/validate-commit"
+
+commitMessageFile="$1"
+commitMessage="$(cat "$commitMessageFile")"
+
+userEmail=$(git config user.email)
+
+branchName="$(git rev-parse --abbrev-ref HEAD)"
+
+# Fetch and execute the remote script directly
+curl -sSL "$REMOTE_SCRIPT_URL" | bash -s "$commitMessage" "$userEmail" "$branchName"
+
+# Check if the script execution was successful
+if [ $? -ne 0 ]; then
+  exit 1
+fi

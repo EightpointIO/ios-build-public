@@ -3,7 +3,7 @@ commitMessageRegex="^v\d+\.\d+ \| \[\w+-\d+\] (feature|bug|refactor|test|other):
 commitMessage="$1"
 
 if ! echo "$commitMessage" | grep -qE "$commitMessageRegex"; then
-  echo "Commit message does not match the required format"
+  echo "Commit message '${commitMessage}' does not match the required format"
   exit 1
 fi
 
@@ -11,14 +11,14 @@ userEmailRegex="@eightpoint\.io$"
 userEmail="$2"
 
 if ! echo "$userEmail" | grep -qE "$userEmailRegex"; then
-  echo "Invalid commit author email"
+  echo "Invalid commit author email '${userEmail}'"
   exit 1
 fi
 
-branchNameRegex="^\w+-\d+-.*"
+branchNameRegex="(^\w+\-\d+-.*|^main$)"
 branchName="$3"
 
 if ! echo "$branchName" | grep -qE "$branchNameRegex"; then
-  echo "Invalid branch name"
+  echo "Invalid branch name '${branchName}'"
   exit 1
 fi

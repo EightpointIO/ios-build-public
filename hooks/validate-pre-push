@@ -1,0 +1,8 @@
+#!/bin/sh
+branchNameRegex="(^\w+\-\d+-.*|^main$)"
+branchName="$1"
+
+if ! echo "$branchName" | grep -qE "$branchNameRegex"; then
+  echo "Invalid branch name"
+  exit 1
+fi
