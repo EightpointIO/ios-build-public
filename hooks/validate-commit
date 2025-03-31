@@ -14,3 +14,11 @@ if ! echo "$userEmail" | grep -qE "$userEmailRegex"; then
   echo "Invalid commit author email"
   exit 1
 fi
+
+branchNameRegex="^\w+-\d+-.*"
+branchName="$3"
+
+if ! echo "$branchName" | grep -qE "$branchNameRegex"; then
+  echo "Invalid branch name"
+  exit 1
+fi
