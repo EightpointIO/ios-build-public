@@ -1,4 +1,4 @@
-name: Central Github CI Pipeline
+name: Run Danger
 
 on:
   pull_request:
