@@ -1,13 +1,6 @@
 #!/bin/sh
 commitMessageRegex="^v\d+\.\d+ \| \[\w+-\d+\] (feature|bug|refactor|test|other): .*"
-commitMessageFile="$1"
-
-if [ -z "$commitMessageFile" ]; then
-  echo "Error: No commit message file provided."
-  exit 1
-fi
-
-commitMessage=$(cat "$commitMessageFile")
+commitMessage="$1"
 
 if ! echo "$commitMessage" | grep -qE "$commitMessageRegex"; then
   echo "Commit message does not match the required format"
@@ -15,9 +8,9 @@ if ! echo "$commitMessage" | grep -qE "$commitMessageRegex"; then
 fi
 
 userEmailRegex="@eightpoint\.io$"
-userEmail=$(git config user.email)
+userEmail="$2"
 
-if ! [[ "$userEmail" =~ $userEmailRegex ]]; then
+if ! echo "$userEmail" | grep -qE "$userEmailRegex"; then
   echo "Invalid commit author email"
   exit 1
 fi
