@@ -18,10 +18,6 @@ runs:
       run: curl -O https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/Dangerfile.swift
       shell: bash
 
-    - name: Debug GitHub Context
-      run: cat $github.event_path
-      shell: bash
-
     - name: Run Danger
       run: |
        docker run --rm \
