@@ -9,19 +9,26 @@ on:
     types: [opened, synchronize, reopened]
 
 runs:
-  using: 'docker'
-  image: ghcr.io/danger/danger-swift-with-swiftlint:3.15.0
+  using: 'composite'
   steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Download SwiftLint config
-      run: curl -o ".swiftlint.yml" https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/.swiftlint.yml
+      run: curl -O https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/.swiftlint.yml
+      shell: bash
 
     - name: Download Dangerfile
-      run: curl -o "Dangerfile.swift" https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/Dangerfile.swift
+      run: curl -O https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/Dangerfile.swift
+      shell: bash
 
     - name: Run Danger
       env:
         GITHUB_TOKEN: github-token
-      run: danger-swift ci -dangerfile="Dangerfile.swift" --config=".swiftlint.yml" --fail-on-errors
+      run: |
+       docker run --rm \
+          -e GITHUB_ACTIONS=true
+          -v "${{ github.workspace }}:/workspace" \
+          ghcr.io/danger/danger-swift-with-swiftlint:3.15.0 \
+          danger-swift ci --dangerfile="/workspace/Dangerfile.swift" --config="/workspace/.swiftlint.yml" --fail-on-errors
+      shell: bash
