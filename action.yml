@@ -8,22 +8,20 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
-jobs:
-  danger:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/danger/danger-swift-with-swiftlint:3.15.0
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+runs:
+  using: 'docker'
+  image: ghcr.io/danger/danger-swift-with-swiftlint:3.15.0
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Download SwiftLint config
-        run: curl -o ".swiftlint.yml" https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/.swiftlint.yml
+    - name: Download SwiftLint config
+      run: curl -o ".swiftlint.yml" https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/.swiftlint.yml
 
-      - name: Download Dangerfile
-        run: curl -o "Dangerfile.swift" https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/Dangerfile.swift
+    - name: Download Dangerfile
+      run: curl -o "Dangerfile.swift" https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/Dangerfile.swift
 
-      - name: Run Danger
-        env:
-          GITHUB_TOKEN: github-token
-        run: danger-swift ci -dangerfile="Dangerfile.swift" --config=".swiftlint.yml" --fail-on-errors
+    - name: Run Danger
+      env:
+        GITHUB_TOKEN: github-token
+      run: danger-swift ci -dangerfile="Dangerfile.swift" --config=".swiftlint.yml" --fail-on-errors
