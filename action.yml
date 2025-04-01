@@ -4,10 +4,6 @@ inputs:
     description: GitHub access token for Danger
     required: true
 
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-
 runs:
   using: 'composite'
   steps:
@@ -22,12 +18,26 @@ runs:
       run: curl -O https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/Dangerfile.swift
       shell: bash
 
+    - name: Debug GitHub Context
+      run: cat $github.event_path
+      shell: bash
+
     - name: Run Danger
-      env:
-        GITHUB_TOKEN: github-token
       run: |
        docker run --rm \
-          -e GITHUB_ACTIONS=true
+          -e GITHUB_ACTIONS=true \
+          -e GITHUB_TOKEN="${{ inputs.github-token }}" \
+          -e GITHUB_ACTOR="${{ github.actor }}" \
+          -e GITHUB_EVENT_NAME="${{ github.event_name }}" \
+          -e GITHUB_EVENT_PATH="${{ github.event_path }}" \
+          -e GITHUB_JOB="${{ github.job }}" \
+          -e GITHUB_REF="${{ github.ref }}" \
+          -e GITHUB_REPOSITORY="${{ github.repository }}" \
+          -e GITHUB_RUN_ID="${{ github.run_id }}" \
+          -e GITHUB_RUN_NUMBER="${{ github.run_number }}" \
+          -e GITHUB_SHA="${{ github.sha }}" \
+          -e GITHUB_WORKFLOW="${{ github.workflow }}" \
+          -e GITHUB_WORKSPACE="${{ github.workspace }}" \
           -v "${{ github.workspace }}:/workspace" \
           ghcr.io/danger/danger-swift-with-swiftlint:3.15.0 \
           danger-swift ci --dangerfile="/workspace/Dangerfile.swift" --config="/workspace/.swiftlint.yml" --fail-on-errors

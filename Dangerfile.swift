@@ -30,7 +30,7 @@ if let github {
     let allSourceFiles = git.modifiedFiles + git.createdFiles
     if !allSourceFiles.isEmpty {
         let totalLinesOfCode = allSourceFiles.reduce(0) { partialResult, file in
-            if let diff = try? danger.utils.diff(forFile: file, sourceBranch: danger.github.pullRequest.head.ref).get() {
+            if let diff = try? danger.utils.diff(forFile: file, sourceBranch: github.pullRequest.head.ref).get() {
                 let changes = diff.changes
                 switch changes {
                 case .created(let addedLines):
