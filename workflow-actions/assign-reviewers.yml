@@ -1,0 +1,49 @@
+name: Assign PR Reviewers
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  assign-reviewers:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+    - name: Add author as the assignee
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          const prNumber = context.payload.pull_request.number;
+          const prAuthor = context.payload.pull_request.user.login;
+
+          await github.rest.issues.addAssignees({
+            owner: owner,
+            repo: repo,
+            issue_number: prNumber,
+            assignees: [prAuthor]
+          });
+    - name: Add reviewers from the [TEAM-LABEL] team
+      uses: actions/github-script@v6
+      env:
+        ACTION_API_TOKEN: ${{ secrets.ACTION_API_TOKEN }}
+      with:
+        script: |
+          const { execSync } = require('child_process');
+
+          const repo = context.repo.repo;
+          const pr_number = context.payload.pull_request.number;
+          const pr_author = context.payload.pull_request.user.login;
+          const token = process.env.ACTION_API_TOKEN;
+          
+          const 
+          const membersData = execSync(`curl --location "https://api.github.com/orgs/EightpointIO/teams/[TEAM-SLUG]/members" -H "Authorization: Bearer ${token}"`);
+          const membersJSON = JSON.parse(membersData);
+          const logins = membersJSON
+            .map(member => JSON.stringify(member.login))
+            .filter(login => login != JSON.stringify(pr_author));
+
+          execSync(`curl --location "https://api.github.com/repos/EightpointIO/${repo}/pulls/${pr_number}/requested_reviewers" -H "Authorization: Bearer ${token}" -d '{"reviewers":[${logins}]}'`);
