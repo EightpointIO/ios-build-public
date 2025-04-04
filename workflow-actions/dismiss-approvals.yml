@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check If PR
+    - name: Check If remote head is PR
       id: check_pr
       uses: actions/github-script@v6
       with:
