@@ -39,7 +39,6 @@ jobs:
           const pr_author = context.payload.pull_request.user.login;
           const token = process.env.ACTION_API_TOKEN;
           
-          const 
           const membersData = execSync(`curl --location "https://api.github.com/orgs/EightpointIO/teams/[TEAM-SLUG]/members" -H "Authorization: Bearer ${token}"`);
           const membersJSON = JSON.parse(membersData);
           const logins = membersJSON
