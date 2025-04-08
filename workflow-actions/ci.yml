@@ -1,0 +1,15 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  call_central_ci:
+    uses: EightpointIO/ios-build-public/.github/workflows/ci.yml@main
+    with:
+      TEAM_NAME: "[TEAM-SLUG]"
+    secrets: inherit

@@ -1,0 +1,116 @@
+name: CI/CD Pipeline
+on:
+  workflow_call:
+    inputs:
+      TEAM_NAME:
+        required: true
+        type: string
+
+jobs:
+  assign_reviewers:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+    - name: Add author as the assignee
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          const pr_number = context.payload.pull_request.number;
+          const pr_author = context.payload.pull_request.user.login;
+
+          await github.rest.issues.addAssignees({
+            owner: owner,
+            repo: repo,
+            issue_number: pr_number,
+            assignees: [pr_author]
+          });
+
+    - name: Add reviewers
+      uses: actions/github-script@v6
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACTION_API_TOKEN }}
+      with:
+        script: |
+          const { execSync } = require('child_process');
+
+          const repo = context.repo.repo;
+          const pr_number = context.payload.pull_request.number;
+          const pr_author = context.payload.pull_request.user.login;
+          const token = process.env.GITHUB_TOKEN;
+          
+          const membersData = execSync(`curl --location "https://api.github.com/orgs/EightpointIO/teams/${{ inputs.TEAM_NAME }}/members" -H "Authorization: Bearer ${token}"`);
+          const membersJSON = JSON.parse(membersData);
+          const logins = membersJSON
+            .map(member => JSON.stringify(member.login))
+            .filter(login => login != JSON.stringify(pr_author));
+
+          execSync(`curl --location "https://api.github.com/repos/EightpointIO/${repo}/pulls/${pr_number}/requested_reviewers" -H "Authorization: Bearer ${token}" -d '{"reviewers":[${logins}]}'`);
+
+  notify_on_slack:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
+    steps:
+    - name: Send notification to Slack
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      run: |
+        PR_URL="${{ github.event.pull_request.html_url }}"
+        PR_TITLE="${{ github.event.pull_request.title }}"
+        REPO_NAME="${{ github.repository }}"
+
+        curl -X POST -H 'Content-type: application/json' --data "{
+          \"text\": \"🚀 <!here> A new pull request has been opened in *${REPO_NAME}*: *<${PR_URL}|${PR_TITLE}>*\"
+        }" $SLACK_WEBHOOK_URL
+
+  check_pr_quality:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    container:
+      image: ghcr.io/danger/danger-swift-with-swiftlint:3.15.0
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download SwiftLint config
+        run: curl -o ".swiftlint.yml" https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/.swiftlint.yml
+
+      - name: Download Dangerfile
+        run: curl -o "Dangerfile.swift" https://raw.githubusercontent.com/EightpointIO/ios-build-public/refs/heads/main/Dangerfile.swift
+
+      - name: Run Danger
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTION_API_TOKEN }}
+        run: danger-swift ci --fail-on-errors
+
+  dismiss_stale_approvals:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+    steps:
+    - name: Dismiss Approvals
+      uses: actions/github-script@v6
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACTION_API_TOKEN }}
+      with:
+        script: |
+          const { execSync } = require('child_process');
+
+          const repo = context.repo.repo;
+          const token = process.env.GITHUB_TOKEN;
+          const pr_number = context.payload.pull_request.number;
+          
+          const getReviewsURL = `https://api.github.com/repos/EightpointIO/${repo}/pulls/${pr_number}/reviews`;
+          const reviewsData = execSync(`curl --location "${getReviewsURL}" -H "Authorization: Bearer ${token}"`);
+          const reviewsJSON = JSON.parse(reviewsData);
+          const approvedReviewsIDs = reviewsJSON
+            .map(review => review.state == "APPROVED" ? review.id : null)
+            .filter(review => review);
+
+          approvedReviewsIDs.forEach(reviewID => { 
+            const dismissReviewURL = `https://api.github.com/repos/EightpointIO/${repo}/pulls/${pr_number}/reviews/${reviewID}/dismissals`;
+            execSync(`curl --location --request PUT ${dismissReviewURL} -H "Authorization: Bearer ${token}" -d '{"event": "DISMISS", "message":"There is a new commit, please review the changes."}'`);
+          });
