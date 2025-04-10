@@ -95,6 +95,7 @@ jobs:
       uses: actions/github-script@v6
       env:
         GITHUB_TOKEN: ${{ secrets.ACTION_API_TOKEN }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       with:
         script: |
           const { execSync } = require('child_process');
@@ -114,3 +115,16 @@ jobs:
             const dismissReviewURL = `https://api.github.com/repos/EightpointIO/${repo}/pulls/${pr_number}/reviews/${reviewID}/dismissals`;
             execSync(`curl --location --request PUT ${dismissReviewURL} -H "Authorization: Bearer ${token}" -d '{"event": "DISMISS", "message":"There is a new commit, please review the changes."}'`);
           });
+
+          if (approvedReviewsIDs.length > 0) {
+            const pr_url = context.payload.pull_request.html_url;
+            const pr_title = context.payload.pull_request.title;
+            const slack_webhook_url = process.env.SLACK_WEBHOOK_URL;
+            
+            const message = {
+              text: `ℹ <!here> A new commit has been pushed to *PR<${pr_url}|#${pr_number}>* in *${repo}* and approvals have been dismissed. Please review the changes: <${pr_url}|${pr_title}>`
+            };
+
+            execSync(`curl -X POST -H "Content-type: application/json" --data '${JSON.stringify(message)}' ${slack_webhook_url}`);
+          }
+    
