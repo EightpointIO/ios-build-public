@@ -47,7 +47,7 @@ jobs:
           const membersJSON = JSON.parse(membersData);
           const logins = membersJSON
             .map(member => JSON.stringify(member.login))
-            .filter(login => login != JSON.stringify(pr_author));
+            .filter(login => login != JSON.stringify(pr_author) && login != "ios-devops");
 
           execSync(`curl --location "https://api.github.com/repos/EightpointIO/${repo}/pulls/${pr_number}/requested_reviewers" -H "Authorization: Bearer ${token}" -d '{"reviewers":[${logins}]}'`);
 
