@@ -58,13 +58,24 @@ jobs:
     - name: Send notification to Slack
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_MEMBERS: ${{ secrets.SLACK_MEMBERS }}
       run: |
         PR_URL="${{ github.event.pull_request.html_url }}"
         PR_TITLE="${{ github.event.pull_request.title }}"
+        PR_OWNER="${{ github.event.pull_request.user.login }}"
         REPO_NAME="${{ github.repository }}"
+        REPO_NAME=${REPO_NAME#EightpointIO/}
+
+        SLACK_MEMBER_ID=$(echo "$SLACK_MEMBERS" | jq -r --arg owner "$PR_OWNER" '.[$owner]')
+
+        if [ "$SLACK_MEMBER_ID" != "null" ]; then
+          SLACK_MESSAGE_PREFIX="<@$SLACK_MEMBER_ID> has opened a new PR in"
+        else
+          SLACK_MESSAGE_PREFIX="A new PR has been opened in"
+        fi
 
         curl -X POST -H 'Content-type: application/json' --data "{
-          \"text\": \"🚀 <!here> A new pull request has been opened in *${REPO_NAME}*: *<${PR_URL}|${PR_TITLE}>*\"
+          \"text\": \"🚀 <!here> ${SLACK_MESSAGE_PREFIX} *${REPO_NAME}*: *<${PR_URL}|${PR_TITLE}>*\"
         }" $SLACK_WEBHOOK_URL
 
   check_pr_quality:
