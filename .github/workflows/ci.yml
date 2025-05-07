@@ -161,7 +161,12 @@ jobs:
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ inputs.XCODE_VERSION }}
-          simulators: ${{ inputs.SIMULATOR }}
+          
+      - name: Configure SPM to use HTTPS with token
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTION_API_TOKEN }}
+        run: |
+          git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "git@github.com:"
 
       - name: Run Unit Tests
         run: |
