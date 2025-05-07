@@ -152,7 +152,7 @@ jobs:
     
   run_unit_tests:
     runs-on: macOS-latest
-    if: ${{ github.event_name == 'pull_request' && (github.event.action == 'synchronize' || github.event.action == "opened") && inputs.TESTS_SCHEME_NAME != '' }}
+    if: ${{ github.event_name == 'pull_request' && (github.event.action == 'synchronize' || github.event.action == 'opened') && inputs.TESTS_SCHEME_NAME != '' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
