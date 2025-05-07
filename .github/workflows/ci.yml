@@ -174,6 +174,7 @@ jobs:
 
       - name: Run Unit Tests
         run: |
+          defaults write com.apple.dt.Xcode IDESkipPackagePluginFingerprintValidatation -bool YES
           xcodebuild test -scheme ${{ inputs.TESTS_SCHEME_NAME }} -destination "platform=iOS Simulator,name=${{ inputs.SIMULATOR }},OS=${{ inputs.SIMULATOR_OS }}"
           if [ $? -ne 0 ]; then
             echo "Tests for ${{ inputs.TESTS_SCHEME_NAME }} failed!"
