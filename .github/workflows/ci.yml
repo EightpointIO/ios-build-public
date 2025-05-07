@@ -5,6 +5,17 @@ on:
       TEAM_NAME:
         required: true
         type: string
+      TESTS_SCHEME_NAME:
+        required: false
+        type: string
+      SIMULATOR:
+        required: false
+        type: string
+        default: 'iPhone 15'
+      XCODE_VERSION:
+        required: false
+        type: string
+        default: 'latest'
 
 jobs:
   assign_reviewers:
@@ -139,3 +150,23 @@ jobs:
             execSync(`curl -X POST -H "Content-type: application/json" --data '${JSON.stringify(message)}' ${slack_webhook_url}`);
           }
     
+  run_unit_tests:
+    runs-on: macOS-latest
+    if: ${{ github.event_name == 'pull_request' && (github.event.action == 'synchronize' || github.event.action == "opened") && inputs.TESTS_SCHEME_NAME != '' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Xcode
+        uses: keith/setup-xcode@v1
+        with:
+          xcode-version: ${{ inputs.XCODE_VERSION }}
+          simulators: ${{ inputs.SIMULATOR }}
+
+      - name: Run Unit Tests
+        run: |
+          xcodebuild test -scheme ${{ inputs.TESTS_SCHEME_NAME }} -destination "platform=iOS Simulator,name=${{ inputs.SIMULATOR }}"
+          if [ $? -ne 0 ]; then
+            echo "Tests for ${{ inputs.TESTS_SCHEME_NAME }} failed!"
+            exit 1
+          fi
