@@ -12,4 +12,5 @@ jobs:
     uses: EightpointIO/ios-build-public/.github/workflows/ci.yml@main
     with:
       TEAM_NAME: "[TEAM-SLUG]"
+      TESTS_SCHEME_NAME: "[TESTS_SCHEME_NAME]"
     secrets: inherit
